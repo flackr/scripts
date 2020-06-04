@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+INFILE="$1"
+OUTFILE="$2"
+ENCODER="$(which avconv || which ffmpeg)"
+
+if [ $# -lt 2 ]; then
+  echo "Run $0 inputvideo output.gif [additional arguments]"
+  exit 1
+fi
+
+if [ -z "$ENCODER" ]; then
+  echo avconv or ffmpeg not found, please apt-get install either program.
+  exit 1
+fi
+
+shift 2
+
+ARGS=""
+DEFAULT_FILTERS="fps=30"
+FILTERS="$DEFAULT_FILTERS"
+while [ $# -gt 0 ]; do
+  ARG="$1"
+  if [[ "$ARG"="-vf" ]]; then
+    shift 1
+    FILTERS="$1"
+  else
+    ARGS="$ARGS $ARG"
+  fi
+  shift 1
+done
+
+if [[ "$FILTERS"="$DEFAULT_FILTERS" ]]; then
+  echo Warning: No filters specified. Specify filters to reduce filesize, e.g.
+  echo -vf fps=15,scale=320:-1 to make a 15fps 320px wide gif.
+  echo -ss 00:00:10 -to 00:00:30 to cut the source video from 10s to 30s.
+fi
+
+palette="$(mktemp /tmp/makegif.XXXXXX.png)"
+trap "rm -f $palette" EXIT
+
+$ENCODER -v warning -i "$INFILE" -vf "$FILTERS,palettegen" $ARGS -y $palette || exit $?
+$ENCODER -v warning -i "$INFILE" -i "$palette" -lavfi "$FILTERS [x]; [x][1:v] paletteuse" $ARGS -y "$OUTFILE" || exit $?
