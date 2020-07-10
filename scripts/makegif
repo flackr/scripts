@@ -21,7 +21,7 @@ DEFAULT_FILTERS="fps=30"
 FILTERS="$DEFAULT_FILTERS"
 while [ $# -gt 0 ]; do
   ARG="$1"
-  if [[ "$ARG"="-vf" ]]; then
+  if [ "$ARG" == "-vf" ]; then
     shift 1
     FILTERS="$1"
   else
@@ -30,10 +30,10 @@ while [ $# -gt 0 ]; do
   shift 1
 done
 
-if [[ "$FILTERS"="$DEFAULT_FILTERS" ]]; then
+if [ "$FILTERS" == "$DEFAULT_FILTERS" ]; then
   echo Warning: No filters specified. Specify filters to reduce filesize, e.g.
   echo -vf fps=15,scale=320:-1 to make a 15fps 320px wide gif.
-  echo -ss 00:00:10 -to 00:00:30 to cut the source video from 10s to 30s.
+  echo -vf trim=30:40 to cut the source video from 30s to 40s.
 fi
 
 palette="$(mktemp /tmp/makegif.XXXXXX.png)"
