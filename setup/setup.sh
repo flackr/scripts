@@ -20,8 +20,8 @@ if [ ! -d vim ]; then
   git clone https://github.com/vim/vim.git || exit 1
 fi
 pushd vim
-./configure --with-features=huge --enable-multibyte --enable-pythoninterp=yes --enable-python3interp=yes --prefix=/usr/local/
 make distclean || exit 1
+./configure --with-features=huge --enable-multibyte --enable-pythoninterp=yes --enable-python3interp=yes --prefix=/usr/local/ || exit 1
 make || exit 1
 sudo make install
 popd
