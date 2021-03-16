@@ -2,13 +2,13 @@
 
 # Put .local/bin in PATH
 echo "export PATH=\"$HOME/.local/bin:\$PATH\"" > .new_bash_aliases
-if [ -f ~/.bash_aliases ]; then
+if [ -f "~/.bash_aliases" ]; then
   grep -v "export PATH=" ~/.bash_aliases >> .new_bash_aliases
 fi
-mv .new_bash_aliases .bash_aliases
+mv .new_bash_aliases ~/.bash_aliases
 source ~/.bash_aliases
 
-sudo apt install ffmpeg build-essential cmake python3-dev libncurses-dev nodejs
+sudo apt install ffmpeg build-essential cmake python3 python3-dev python3-pip libncurses-dev nodejs
 npm python3-pip
 
 pushd `dirname $0`
