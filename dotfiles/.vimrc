@@ -15,6 +15,7 @@ Plugin 'ycm-core/YouCompleteMe'
 call vundle#end()            " required
 filetype plugin indent on    " required
 
+set backspace=indent,eol,start
 set bg=dark
 set incsearch
 set hlsearch

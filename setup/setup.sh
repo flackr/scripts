@@ -8,7 +8,7 @@ fi
 mv .new_bash_aliases ~/.bash_aliases
 source ~/.bash_aliases
 
-sudo apt install ffmpeg build-essential cmake python3 python3-dev python3-pip libncurses-dev nodejs
+sudo apt install ffmpeg build-essential cmake python3 python3-dev python3-pip libncurses-dev nodejs npm screen
 npm python3-pip
 
 pushd `dirname $0`
