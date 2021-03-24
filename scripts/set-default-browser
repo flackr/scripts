@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+unset BROWSER
+xdg-settings set default-web-browser garcon_host_browser.desktop
