@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+pushd `dirname $0`
 mkdir -p work
 pushd work
 rm -rf firefox || exit 1
@@ -9,8 +10,7 @@ mv firefox ~/Downloads/firefox || exit 1
 mkdir -p ~/.local/share/applications || exit 1
 
 # Install icons
-ls ~/Downloads/firefox/browser/chrome/icons/default/default*.png | while read
-ICON; do
+ls ~/Downloads/firefox/browser/chrome/icons/default/default*.png | while read ICON; do
   SIZE=`echo "$ICON"|sed 's/^.*\/default\([0-9]*\)\.png$/\1/g'`
   mkdir -p ~/.local/share/icons/hicolor/${SIZE}x${SIZE}/apps || exit 1
   ln -s "$ICON" ~/.local/share/icons/hicolor/${SIZE}x${SIZE}/apps/firefox.png || exit 1
