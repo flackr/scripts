@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+
+MAIN_BRANCH=main
+
+if [ $# -gt 0 ]
+then
+  MAIN_BRANCH=$1
+fi
+
+FAILED_MERGE="$(mktemp)"
+OBSOLETE_BRANCHES="$(mktemp)"
+trap "{ rm -f ${FAILED_MERGE} ${OBSOLETE_BRANCHES}; exit 255; }" EXIT
+
+CUR_LIST=(`git branch -vv | cut -c 3- | egrep -v '[\w]*[^\w]*[\w]*[^\w]*\[' | cut -d' ' -f 1`)
+CUR_LIST+=(`git branch -vv | cut -c 3- | egrep '[\w]*[^\w]*[\w]*[^\w]*\['$MAIN_BRANCH'[]:]' | cut -d' ' -f 1`)
+
+NEXT_LIST=()
+DEPENDENT=0
+
+while [ ${#CUR_LIST[@]} -gt 0 ]; do
+  echo "Processing ${#CUR_LIST[@]} branches: ${CUR_LIST[@]}"
+
+  for BRANCH in "${CUR_LIST[@]}"; do
+    # Add dependent branches
+    NEXT_LIST+=(`git branch -vv | cut -c 3- | egrep '[\w]*[^\w]*[\w]*[^\w]*\['$BRANCH'[]:]' | cut -d' ' -f 1`)
+
+    if [ $DEPENDENT -eq 1 ]; then
+      git checkout $BRANCH && git pull
+      if [ $? -ne 0 ]
+      then
+        git pull --abort || exit -1
+        echo $BRANCH >> $FAILED_MERGE
+        echo "Merge into $BRANCH failed."
+      fi
+    else
+      git checkout $BRANCH && git merge $MAIN_BRANCH --no-verify -m "Merge branch '$MAIN_BRANCH' into $BRANCH"
+      if [ $? -ne 0 ]
+      then
+        git merge --abort || exit -1
+        echo $BRANCH >> $FAILED_MERGE
+        echo "Merge of $MAIN_BRANCH into $BRANCH failed."
+      fi
+    fi
+    if [ `git diff $MAIN_BRANCH --name-only|wc -l` -eq 0 ]
+    then
+      echo $BRANCH >> $OBSOLETE_BRANCHES
+      echo "Branch $BRANCH is identical to $MAIN_BRANCH and can be removed."
+    fi
+  done
+
+  CUR_LIST=("${NEXT_LIST[@]}")
+  NEXT_LIST=()
+  DEPENDENT=1
+done
+
+git checkout $MAIN_BRANCH
+
+RESULT=0
+echo
+echo "Merging complete."
+
+FAILED_MERGE_TEXT="$(cat "$FAILED_MERGE" | tr '\n' ' ')"
+if [ -n "$FAILED_MERGE_TEXT" ]
+then
+  echo "Failed to merge: $FAILED_MERGE_TEXT"
+  RESULT=1
+fi
+
+OBSOLETE_BRANCHES_TEXT="$(cat "$OBSOLETE_BRANCHES" | tr '\n' ' ')"
+if [ -n "$OBSOLETE_BRANCHES_TEXT" ]
+then
+  echo "Following branches are obsolete: $OBSOLETE_BRANCHES_TEXT"
+fi
+
+rm -f ${FAILED_MERGE} ${OBSOLETE_BRANCHES}
+trap "" EXIT
+exit $RESULT
