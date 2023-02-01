@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+MAIN_BRANCH=main
+
+if [ $# -gt 0 ]
+then
+  MAIN_BRANCH=$1
+fi
+
+CUR_LIST=(`git branch -vv | cut -c 3- | egrep -v '[\w]*[^\w]*[\w]*[^\w]*\[' | cut -d' ' -f 1`)
+CUR_LIST+=(`git branch -vv | cut -c 3- | egrep '[\w]*[^\w]*[\w]*[^\w]*\['$MAIN_BRANCH'[]:]' | cut -d' ' -f 1`)
+
+NEXT_LIST=()
+DEPENDENT=0
+
+while [ ${#CUR_LIST[@]} -gt 0 ]; do
+  echo "Processing ${#CUR_LIST[@]} branches: ${CUR_LIST[@]}"
+
+  for BRANCH in "${CUR_LIST[@]}"; do
+    # Add dependent branches
+    NEXT_LIST+=(`git branch -vv | cut -c 3- | egrep '[\w]*[^\w]*[\w]*[^\w]*\['$BRANCH'[]:]' | cut -d' ' -f 1`)
+
+    if [ `git diff $MAIN_BRANCH $BRANCH --name-only|wc -l` -eq 0 ]
+    then
+      echo "Branch $BRANCH is identical to $MAIN_BRANCH and can be removed."
+      git branch -D $BRANCH
+    fi
+  done
+
+  CUR_LIST=("${NEXT_LIST[@]}")
+  NEXT_LIST=()
+  DEPENDENT=1
+done
+
+RESULT=0
+exit $RESULT
